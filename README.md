@@ -3,7 +3,9 @@
 This project contains an API that allow user to introduce and retrieve some data.
 It is documented with swagger.
 
-This solution is prepared to be deployed in a production environment, in kubernetes cluster. Helm templates files were prepared to be deployed
+This solution is prepared to be deployed in a production environment, in kubernetes cluster. Helm templates files were prepared to be deployed.
+
+A `k8s-diagram` and a `systems diagram` are provided.
 
 ### Tech stack
 ```sh
@@ -49,6 +51,8 @@ This solution creates:
 - `horizontalAutoscallingGroup` that fix `minPods` in `1` and `maxPods` in `2` depeneding on `% CPU`
 - `service` that expose internally the `pods` ports
 - simple `ingress` controller that routes trafic to the service
+
+** **Ingress Controller must be replaced for alb class one with all the annotations required**
 
 ### Tests
 
