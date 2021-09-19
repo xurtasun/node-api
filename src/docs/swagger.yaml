@@ -1,0 +1,94 @@
+openapi: 3.0.1
+info:
+  title: Hello World API
+  description: This is a simple API that provides information about users birthay's
+  version: 1.0.0
+servers:
+- url: http://localhost:8081
+tags:
+- name: hello
+  description: Hello World enpoint
+
+paths:
+  /hello/{username}:
+    get:
+      tags:
+        - hello
+      summary: Get username birthday information
+      parameters:
+      - name: username
+        in: path
+        description: Username of the user
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful response with content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        400:
+          description: Bad request, malformed parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - hello
+      summary: Update/Create a username birthday
+      requestBody:
+        description: User object that will be created if that username doesn't exist or will update if it do.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      parameters:
+      - name: username
+        in: path
+        description: Username of the user
+        required: true
+        schema:
+          type: string
+      responses:
+        204:
+          description: successful operation with no response content
+          content: {}
+        400:
+          description: Bad request, request body, or malformed parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        dateOfBirth:
+          type: string
+          format: date
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+    Message:
+      type: object
+      properties:
+        message:
+          type: string

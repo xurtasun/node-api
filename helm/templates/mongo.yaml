@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.project }}-mongo
+  namespace: {{ .Values.project }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.project }}-mongo
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    project: {{ .Values.project }}
+    role: mongo
+    environment: {{ .Values.environment }}
+spec:
+  strategy:
+    type: RollingUpdate
+{{- if .Values.deployment.rollingUpdate }}
+    rollingUpdate:
+{{ toYaml .Values.deployment.rollingUpdate | indent 7 }}
+{{- end }}
+## How many old ReplicaSets for this Deployment you want to retain
+  revisionHistoryLimit: {{ .Values.deployment.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      role: mongo
+  template:
+    metadata:
+      labels:
+        project: {{ .Values.project }}
+        role: mongo
+        environment: {{ .Values.environment }}
+      annotations:
+        company/environment: {{.Values.environment}}
+        company/project: {{.Values.project}}
+        company/role: mongo
+{{- with .Values.container.podAnnotations }}
+{{ toYaml . | indent 8 }}
+{{- end }}
+    spec:
+{{- if .Values.serviceAccount.enabled }}
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+{{- end }}
+      containers:
+      - name: {{ .Values.project }}-mongo
+        image: "{{ .Values.mongo.image.repository }}:{{ .Values.mongo.image.tag }}"
+        imagePullPolicy: {{ .Values.mongo.image.pullPolicy }}
+{{- if .Values.mongo.args }}
+        args:  {{ .Values.mongo.args }}
+{{- end }}
+{{- with .Values.mongo.resources }}
+        resources:
+{{ toYaml . | indent 10 }}
+{{- end }}
+{{- if .Values.mongo.ports }}
+        ports:
+{{ toYaml .Values.mongo.ports | indent 10 }}
+{{- end }}
+{{- if .Values.deployment.lifecycle }}
+        lifecycle:
+{{ toYaml .Values.lifecycle | indent 10 }}
+{{- end }}
+{{- if .Values.mongo.livenessProbe }}
+        livenessProbe:
+{{ toYaml .Values.mongo.livenessProbe | indent 10 }}
+{{- end }}
+{{- if .Values.mongo.readinessProbe }}
+        readinessProbe:
+{{ toYaml .Values.mongo.readinessProbe | indent 10 }}
+{{- end }}

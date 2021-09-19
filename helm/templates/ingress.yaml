@@ -1,0 +1,10 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ .Values.project }}
+  namespace: {{ .Values.project }}
+  ##TODO implement ingress class ALB for production envioronment with SGs/certificates...
+spec:
+  backend:
+    serviceName: {{ .Values.project }}-api
+    servicePort: 3300

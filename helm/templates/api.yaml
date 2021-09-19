@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.project }}
+  namespace: {{ .Values.project }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.project }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    project: {{ .Values.project }}
+    environment: {{ .Values.environment }}
+    role: api
+spec:
+  strategy:
+    type: RollingUpdate
+{{- if .Values.deployment.rollingUpdate }}
+    rollingUpdate:
+{{ toYaml .Values.deployment.rollingUpdate | indent 7 }}
+{{- end }}
+## How many old ReplicaSets for this Deployment you want to retain
+  revisionHistoryLimit: {{ .Values.deployment.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      role: api
+  template:
+    metadata:
+      labels:
+        project: {{ .Values.project }}
+        environment: {{ .Values.environment }}
+        role: api
+      annotations:
+        company/environment: {{.Values.environment}}
+        company/project: {{.Values.project}}
+        company/role: api
+{{- with .Values.container.podAnnotations }}
+{{ toYaml . | indent 8 }}
+{{- end }}
+    spec:
+{{- if .Values.serviceAccount.enabled }}
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+{{- end }}
+      containers:
+      - name: {{ .Values.project }}
+        image: "{{ .Values.container.image.registry }}/{{ .Values.container.image.repository }}:{{ .Values.container.image.tag }}"
+        imagePullPolicy: {{ .Values.container.image.pullPolicy }}
+{{- if .Values.container.args }}
+        args:  {{ .Values.container.args }}
+{{- end }}
+{{- with .Values.container.resources }}
+        resources:
+{{ toYaml . | indent 10 }}
+{{- end }}
+{{- if .Values.container.ports }}
+        ports:
+{{ toYaml .Values.container.ports | indent 10 }}
+{{- end }}
+        env:
+          - name: PORT
+            value: {{ .Values.container.env.containerPort | squote }}
+          - name: MONGO_STRING
+            value: {{ .Values.container.env.mongoString }}
+{{- if .Values.deployment.lifecycle }}
+        lifecycle:
+{{ toYaml .Values.lifecycle | indent 10 }}
+{{- end }}
+{{- if .Values.container.livenessProbe }}
+        livenessProbe:
+{{ toYaml .Values.container.livenessProbe | indent 10 }}
+{{- end }}
+{{- if .Values.container.readinessProbe }}
+        readinessProbe:
+{{ toYaml .Values.container.readinessProbe | indent 10 }}
+{{- end }}

@@ -1,0 +1,101 @@
+project: xurtasun
+environment: prod
+deployment:
+  rollingUpdate:
+    # specifies the maximum number of Pods that can be unavailable during the update process.The value can be an absolute number (for example, 5) or a percentage of desired Pods (for example, 10%)
+    maxUnavailable: 0%
+    # specifies the maximum number of Pods that can be created over the desired number of Pods. The value can be an absolute number (for example, 5) or a percentage of desired Pods (for example, 10%)
+    maxSurge: 50%
+  revisionHistoryLimit: 3
+  ## Lifecycle hooks. Actions to do before starting or stopping the container.
+  lifecycle: {}
+mongo:
+  image:
+    repository: mongo
+    tag: 4.2.16
+    pullPolicy: IfNotPresent
+  resources:
+    ## I usually recommend not define cpu limit
+    limits:
+      memory: 400Mi
+    requests:
+      cpu: 50m
+      memory: 400Mi
+  ports:
+  - name: mongo
+    containerPort: &mongoPort 27017
+    protocol: TCP
+  livenessProbe:
+    tcpSocket:
+      port: *mongoPort
+    initialDelaySeconds: 1
+    periodSeconds: 30
+    timeoutSeconds: 30
+    successThreshold: 1
+    failureThreshold: 10
+  readinessProbe:
+    tcpSocket:
+      port: *mongoPort
+    initialDelaySeconds: 1
+    timeoutSeconds: 30
+    successThreshold: 1
+    periodSeconds: 30
+    failureThreshold: 10
+container:
+  podAnnotations: {}
+  image:
+    registry: xurtasun
+    repository: hello
+    tag: v7
+    pullPolicy: IfNotPresent
+  resources:
+    ## I usually recommend not define cpu limit
+    limits:
+      memory: 400Mi
+    requests:
+      cpu: 50m
+      memory: 400Mi
+  env:
+    containerPort: "3300"
+    mongoString: 'mongodb://mongo/hello'
+  ports:
+  - name: api
+    containerPort: &port 3300
+    protocol: TCP
+  livenessProbe:
+    httpGet:
+      path: /ping
+      port: *port
+    initialDelaySeconds: 1
+    periodSeconds: 30
+    timeoutSeconds: 30
+    successThreshold: 1
+    failureThreshold: 10
+  readinessProbe:
+    httpGet:
+      path: /ping
+      port: *port
+    initialDelaySeconds: 1
+    timeoutSeconds: 30
+    successThreshold: 1
+    periodSeconds: 30
+    failureThreshold: 10
+hpa:
+  minReplicas: 1
+  maxReplicas: 2
+  ## average total CPU usage per pod (1-100)
+  cpu: 100
+  ## memory scaling
+  # memory: 200Mi
+serviceAccount:
+  enabled: true
+  name : xurtasun
+service:
+  enabled: true
+  ## Ports on Service resource. Usually the same as containerPorts
+  ## Unset it in case your application don't listen to any port.
+  ports:
+  - name: api
+    port: *port
+    targetPort: *port
+    protocol: TCP

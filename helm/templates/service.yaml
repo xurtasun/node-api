@@ -1,0 +1,39 @@
+{{- if .Values.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.project }}-api
+  namespace: {{ .Values.project }}
+  labels:
+    app.kubernetes.io/name: {{.Values.project}}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    service: {{.Values.project}}
+    environment: {{.Values.environment}}
+    project: {{.Values.project}}
+spec:
+  ports:
+{{ toYaml .Values.service.ports | indent 4 }}
+  selector:
+    role: api
+  type: ClusterIP
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+  namespace: {{ .Values.project }}
+  labels:
+    app.kubernetes.io/name: {{.Values.project}}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    service: {{.Values.project}}
+    environment: {{.Values.environment}}
+    project: {{.Values.project}}
+    role: mongo
+spec:
+  ports:
+    - port: 27017
+      targetPort: 27017
+  type: ClusterIP
+  selector:
+    role: mongo
